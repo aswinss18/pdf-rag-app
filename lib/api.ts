@@ -22,7 +22,8 @@ function buildApiUrl(path: string) {
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
-const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
+const API_BASE_URL = "/api";
+const API_TARGET_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(buildApiUrl(path), {
@@ -216,6 +217,7 @@ function normalizeAnswer(
 
 export const apiConfig = {
   baseUrl: API_BASE_URL,
+  targetUrl: API_TARGET_URL,
 };
 
 export async function getHealth() {
