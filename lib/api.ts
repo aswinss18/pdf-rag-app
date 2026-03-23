@@ -14,7 +14,7 @@ import type {
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
-  "https://pdf-rag-app-xi.vercel.app";
+  "https://pdf-rag-backend-production-67bf.up.railway.app/";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -312,12 +312,12 @@ export async function streamResponse(
   const body =
     mode === "agent"
       ? {
-          query,
-          conversation_history: history.map((message) => ({
-            role: message.role,
-            content: message.content,
-          })),
-        }
+        query,
+        conversation_history: history.map((message) => ({
+          role: message.role,
+          content: message.content,
+        })),
+      }
       : { query };
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
