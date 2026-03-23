@@ -12,12 +12,20 @@ import type {
   ToolCall,
 } from "@/lib/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
-  "https://pdf-rag-backend-production-67bf.up.railway.app/";
+function normalizeApiBaseUrl(value?: string) {
+  const normalized = value?.trim().replace(/^["']|["']$/g, "").replace(/\/+$/, "");
+  return normalized || "https://pdf-rag-backend-production-67bf.up.railway.app";
+}
+
+function buildApiUrl(path: string) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+}
+
+const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(buildApiUrl(path), {
     ...init,
     headers: {
       Accept: "application/json",
@@ -120,17 +128,32 @@ function normalizeReasoning(step: unknown, index: number): ReasoningStep {
 
 function normalizeDocuments(payload: unknown): DocumentRecord[] {
   const root = asRecord(payload);
+  const documentMap =
+    !Array.isArray(payload) && root.documents && typeof root.documents === "object"
+      ? asRecord(root.documents)
+      : null;
+
   const items = Array.isArray(payload)
     ? payload
-    : asArray(root.documents || root.items || root.data);
+    : documentMap
+      ? Object.entries(documentMap).map(([name, details]) => ({
+          name,
+          ...asRecord(details),
+        }))
+      : asArray(root.documents || root.items || root.data);
 
   return items.map((item, index) => {
     const record = asRecord(item);
+    const pagesValue = record.pages;
+    const pageCount = Array.isArray(pagesValue)
+      ? pagesValue.length
+      : pickNumber(record.pages, record.page_count, record.total_pages);
+
     return {
       id: pickString(record.id, record.document_id, record.name) || `doc-${index}`,
       name: pickString(record.name, record.filename, record.title) || `Document ${index + 1}`,
       chunks: pickNumber(record.chunks, record.chunk_count, record.num_chunks),
-      pages: pickNumber(record.pages, record.page_count),
+      pages: pageCount,
       sizeBytes: pickNumber(record.size_bytes, record.size, record.file_size),
       status: pickString(record.status) || "ready",
       uploadedAt: pickString(record.uploaded_at, record.created_at),
@@ -140,10 +163,13 @@ function normalizeDocuments(payload: unknown): DocumentRecord[] {
 
 function normalizeStatus(payload: unknown): SystemStatus {
   const record = asRecord(payload);
+  const statusValue = pickString(record.status, record.health).toLowerCase();
   return {
     healthy:
       Boolean(record.healthy) ||
-      pickString(record.status, record.health).toLowerCase() === "healthy",
+      statusValue === "healthy" ||
+      statusValue === "ok" ||
+      statusValue === "ready",
     model: pickString(record.model, record.llm_model),
     embeddingModel: pickString(record.embedding_model, record.embed_model),
     persistence: pickString(record.persistence, record.persistence_status),
@@ -312,15 +338,15 @@ export async function streamResponse(
   const body =
     mode === "agent"
       ? {
-        query,
-        conversation_history: history.map((message) => ({
-          role: message.role,
-          content: message.content,
-        })),
-      }
+          query,
+          conversation_history: history.map((message) => ({
+            role: message.role,
+            content: message.content,
+          })),
+        }
       : { query };
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(buildApiUrl(path), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
