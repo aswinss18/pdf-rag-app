@@ -1,7 +1,9 @@
-﻿import "client-only";
+import "client-only";
 
 import type {
   AssistantMode,
+  AuthResponse,
+  AuthUser,
   ChatMessage,
   Citation,
   DocumentRecord,
@@ -11,6 +13,9 @@ import type {
   SystemStatus,
   ToolCall,
 } from "@/lib/types";
+
+const API_BASE_URL = "/api";
+const AUTH_TOKEN_KEY = "pdf-rag-token";
 
 function normalizeApiBaseUrl(value?: string) {
   const normalized = value?.trim().replace(/^["']|["']$/g, "").replace(/\/+$/, "");
@@ -22,22 +27,64 @@ function buildApiUrl(path: string) {
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
-const API_BASE_URL = "/api";
 const API_TARGET_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+function getStoredToken() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  return window.localStorage.getItem(AUTH_TOKEN_KEY) || "";
+}
+
+export function setAuthToken(token: string) {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  }
+}
+
+export function clearAuthToken() {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  }
+}
+
+async function readError(response: Response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    const payload = (await response.json()) as Record<string, unknown>;
+    const detail =
+      typeof payload.detail === "string"
+        ? payload.detail
+        : typeof payload.error === "string"
+          ? payload.error
+          : undefined;
+    if (detail) {
+      return detail;
+    }
+  }
+
+  return (await response.text()) || `Request failed with status ${response.status}`;
+}
+
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  options?: { skipAuth?: boolean },
+): Promise<T> {
+  const token = options?.skipAuth ? "" : getStoredToken();
   const response = await fetch(buildApiUrl(path), {
     ...init,
     headers: {
       Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers || {}),
     },
     cache: "no-store",
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed with status ${response.status}`);
+    throw new Error(await readError(response));
   }
 
   if (response.status === 204) {
@@ -78,12 +125,8 @@ function normalizeCitation(source: unknown, index: number): Citation {
   return {
     id: pickString(record.id, record.source_id) || `citation-${index}`,
     documentName:
-      pickString(
-        record.document_name,
-        record.document,
-        record.filename,
-        record.source,
-      ) || `Source ${index + 1}`,
+      pickString(record.document_name, record.document, record.filename, record.doc, record.source) ||
+      `Source ${index + 1}`,
     page:
       typeof record.page === "number"
         ? record.page
@@ -102,18 +145,32 @@ function normalizeCitation(source: unknown, index: number): Citation {
         ? record.score
         : typeof record.similarity === "number"
           ? record.similarity
-          : null,
+          : typeof record.hybrid_score === "number"
+            ? record.hybrid_score
+            : null,
   };
 }
 
 function normalizeToolCall(call: unknown, index: number): ToolCall {
   const record = asRecord(call);
+  const argumentsValue = record.arguments;
+  const resultValue = record.result;
   return {
     id: pickString(record.id, record.call_id) || `tool-${index}`,
     name: pickString(record.name, record.tool, record.tool_name) || "Tool call",
     status: pickString(record.status, record.state),
-    input: pickString(record.input, record.arguments, record.args),
-    output: pickString(record.output, record.result),
+    input:
+      typeof argumentsValue === "string"
+        ? argumentsValue
+        : argumentsValue
+          ? JSON.stringify(argumentsValue, null, 2)
+          : pickString(record.input, record.args),
+    output:
+      typeof resultValue === "string"
+        ? resultValue
+        : resultValue
+          ? JSON.stringify(resultValue, null, 2)
+          : pickString(record.output),
   };
 }
 
@@ -122,7 +179,7 @@ function normalizeReasoning(step: unknown, index: number): ReasoningStep {
   return {
     id: pickString(record.id) || `reasoning-${index}`,
     label: pickString(record.label, record.title, record.step) || `Step ${index + 1}`,
-    detail: pickString(record.detail, record.content, record.message),
+    detail: pickString(record.detail, record.content, record.message, record.reasoning),
     status: pickString(record.status),
   };
 }
@@ -173,13 +230,14 @@ function normalizeStatus(payload: unknown): SystemStatus {
       statusValue === "ready",
     model: pickString(record.model, record.llm_model),
     embeddingModel: pickString(record.embedding_model, record.embed_model),
-    persistence: pickString(record.persistence, record.persistence_status),
-    documentCount: pickNumber(
-      record.document_count,
-      record.documents_loaded,
-      record.loaded_documents,
-    ),
-    chunkCount: pickNumber(record.chunk_count, record.total_chunks),
+    persistence:
+      typeof record.persistence === "string"
+        ? record.persistence
+        : record.persistence && typeof record.persistence === "object"
+          ? JSON.stringify(record.persistence)
+          : pickString(record.persistence_status),
+    documentCount: pickNumber(record.document_count, record.documents_loaded, record.loaded_documents),
+    chunkCount: pickNumber(record.chunk_count, record.total_chunks, record.chunks_in_memory),
     memoryEnabled:
       typeof record.memory_enabled === "boolean" ? record.memory_enabled : undefined,
     raw: record,
@@ -187,15 +245,14 @@ function normalizeStatus(payload: unknown): SystemStatus {
 }
 
 function normalizeMemoryStats(payload: unknown): MemoryStats {
-  const record = asRecord(payload);
+  const record = asRecord(asRecord(payload).memory_stats ?? payload);
   return {
-    totalMemories: pickNumber(record.total_memories, record.total, record.memory_count),
-    chatMessages: pickNumber(record.chat_messages, record.chat_history_count),
-    vectorEntries: pickNumber(record.vector_entries, record.vector_count, record.embeddings),
+    totalMemories: pickNumber(record.total_memories, record.total, record.memory_count, record.stored_memories),
+    chatMessages: pickNumber(record.chat_messages, record.chat_history_count, record.chat_history_length),
+    vectorEntries: pickNumber(record.vector_entries, record.vector_count, record.embeddings, record.memory_index_size),
     lastCleanup: pickString(record.last_cleanup, record.last_cleanup_at),
-    usageLabel:
-      pickString(record.usage, record.usage_label, record.memory_usage) || undefined,
-    raw: record,
+    usageLabel: pickString(record.usage, record.usage_label, record.memory_usage) || undefined,
+    raw: asRecord(payload),
   };
 }
 
@@ -206,12 +263,28 @@ function normalizeAnswer(
   const record = asRecord(payload);
   return {
     role: fallbackRole,
-    content:
-      pickString(record.answer, record.response, record.content, record.message) ||
-      "No response received.",
+    content: pickString(record.answer, record.response, record.content, record.message) || "No response received.",
     citations: asArray(record.sources || record.citations).map(normalizeCitation),
     toolCalls: asArray(record.tool_calls || record.tools).map(normalizeToolCall),
-    reasoning: asArray(record.reasoning || record.steps).map(normalizeReasoning),
+    reasoning: asArray(record.reasoning_steps || record.reasoning || record.steps).map(normalizeReasoning),
+  };
+}
+
+function normalizeAuthResponse(payload: unknown): AuthResponse {
+  const record = asRecord(payload);
+  return {
+    accessToken: pickString(record.access_token),
+    tokenType: pickString(record.token_type) || "bearer",
+    username: pickString(record.username),
+  };
+}
+
+function normalizeAuthUser(payload: unknown): AuthUser {
+  const root = asRecord(payload);
+  const record = asRecord(root.user ?? payload);
+  return {
+    id: typeof record.id === "number" ? record.id : 0,
+    username: pickString(record.username),
   };
 }
 
@@ -220,8 +293,39 @@ export const apiConfig = {
   targetUrl: API_TARGET_URL,
 };
 
+export async function register(username: string, password: string) {
+  const result = await request(
+    "/register",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    },
+    { skipAuth: true },
+  );
+  return normalizeAuthResponse(result);
+}
+
+export async function login(username: string, password: string) {
+  const result = await request(
+    "/login",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    },
+    { skipAuth: true },
+  );
+  return normalizeAuthResponse(result);
+}
+
+export async function getCurrentUser() {
+  const result = await request("/me");
+  return normalizeAuthUser(result);
+}
+
 export async function getHealth() {
-  return request<Record<string, unknown>>("/health");
+  return request<Record<string, unknown>>("/health", undefined, { skipAuth: true });
 }
 
 export async function getStatus() {
@@ -304,10 +408,7 @@ function normalizeStreamPayload(payload: unknown): StreamUpdate {
   if (typeof payload === "string") {
     const trimmed = payload.trim();
     return {
-      text:
-        trimmed === "[DONE]" || trimmed === "DONE" || trimmed === "done"
-          ? ""
-          : payload,
+      text: trimmed === "[DONE]" || trimmed === "DONE" || trimmed === "done" ? "" : payload,
       done: trimmed === "[DONE]" || trimmed === "DONE" || trimmed === "done",
     };
   }
@@ -319,12 +420,8 @@ function normalizeStreamPayload(payload: unknown): StreamUpdate {
     text: pickString(record.delta, record.token, record.content, record.answer, record.text),
     citations: asArray(record.sources || record.citations).map(normalizeCitation),
     toolCalls: asArray(record.tool_calls || record.tools).map(normalizeToolCall),
-    reasoning: asArray(record.reasoning || record.steps).map(normalizeReasoning),
-    done:
-      Boolean(record.done) ||
-      type === "done" ||
-      type === "complete" ||
-      type === "final",
+    reasoning: asArray(record.reasoning_steps || record.reasoning || record.steps).map(normalizeReasoning),
+    done: Boolean(record.done) || type === "done" || type === "complete" || type === "final",
     error: pickString(record.error),
   };
 }
@@ -348,11 +445,13 @@ export async function streamResponse(
         }
       : { query };
 
+  const token = getStoredToken();
   const response = await fetch(buildApiUrl(path), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "text/event-stream",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(body),
     signal,
@@ -360,7 +459,7 @@ export async function streamResponse(
   });
 
   if (!response.ok || !response.body) {
-    throw new Error(`Streaming request failed with status ${response.status}`);
+    throw new Error(await readError(response));
   }
 
   const reader = response.body.getReader();

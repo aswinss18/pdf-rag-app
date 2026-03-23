@@ -33,6 +33,7 @@ interface ChatStore {
   sendMessage: (query: string) => Promise<void>;
   clearChat: () => void;
   setError: (value?: string) => void;
+  reset: () => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -127,6 +128,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
   clearChat() {
     set({ messages: [], error: undefined, isStreaming: false });
+  },
+  reset() {
+    set({
+      messages: [],
+      isStreaming: false,
+      currentMode: "rag",
+      error: undefined,
+    });
   },
   setError(value) {
     set({ error: value });

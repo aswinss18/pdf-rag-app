@@ -11,6 +11,7 @@ interface SystemStore {
   isLoading: boolean;
   error?: string;
   refresh: () => Promise<void>;
+  reset: () => void;
 }
 
 export const useSystemStore = create<SystemStore>((set) => ({
@@ -27,8 +28,16 @@ export const useSystemStore = create<SystemStore>((set) => ({
       set({
         isLoading: false,
         error:
-          error instanceof Error ? error.message : "Unable to reach backend service.",
+        error instanceof Error ? error.message : "Unable to reach backend service.",
       });
     }
+  },
+  reset() {
+    set({
+      status: null,
+      health: null,
+      isLoading: false,
+      error: undefined,
+    });
   },
 }));

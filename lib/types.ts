@@ -1,4 +1,15 @@
-﻿export type AssistantMode = "rag" | "agent";
+export type AssistantMode = "rag" | "agent";
+
+export interface AuthUser {
+  id: number;
+  username: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  tokenType: string;
+  username: string;
+}
 
 export interface Citation {
   id: string;

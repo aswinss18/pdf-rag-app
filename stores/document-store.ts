@@ -14,6 +14,7 @@ interface DocumentStore {
   loadDocuments: () => Promise<void>;
   uploadDocument: (file: File) => Promise<void>;
   clearAllDocuments: () => Promise<void>;
+  reset: () => void;
 }
 
 export const useDocumentStore = create<DocumentStore>((set, get) => ({
@@ -65,5 +66,14 @@ export const useDocumentStore = create<DocumentStore>((set, get) => ({
       });
       throw error;
     }
+  },
+  reset() {
+    set({
+      documents: [],
+      uploadProgress: 0,
+      isUploading: false,
+      isLoading: false,
+      error: undefined,
+    });
   },
 }));

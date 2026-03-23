@@ -18,6 +18,7 @@ interface MemoryStore {
   fetchStats: () => Promise<void>;
   clearMemory: (type: "chat" | "all") => Promise<void>;
   cleanupMemory: (days: number) => Promise<void>;
+  reset: () => void;
 }
 
 export const useMemoryStore = create<MemoryStore>((set, get) => ({
@@ -64,5 +65,13 @@ export const useMemoryStore = create<MemoryStore>((set, get) => ({
       });
       throw error;
     }
+  },
+  reset() {
+    set({
+      stats: null,
+      details: null,
+      isLoading: false,
+      error: undefined,
+    });
   },
 }));
