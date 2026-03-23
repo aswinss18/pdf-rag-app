@@ -1,9 +1,9 @@
 ﻿"use client";
 
-import { useEffectEvent, useRef } from "react";
+import { useRef } from "react";
 
 import { streamResponse } from "@/lib/api";
-import type { AssistantMode, ChatMessage } from "@/lib/types";
+import type { AssistantMode } from "@/lib/types";
 import { mergeStreamingText } from "@/lib/utils";
 import { useChatStore } from "@/stores/chat-store";
 
@@ -18,36 +18,6 @@ export function useStreaming() {
     setStreaming,
     updateAssistantMessage,
   } = useChatStore();
-
-  const handleUpdate = useEffectEvent(
-    (
-      assistantId: string,
-      update: {
-        text?: string;
-        citations?: ChatMessage["citations"];
-        toolCalls?: ChatMessage["toolCalls"];
-        reasoning?: ChatMessage["reasoning"];
-        done?: boolean;
-        error?: string;
-      },
-    ) => {
-      const current = useChatStore
-        .getState()
-        .messages.find((message) => message.id === assistantId);
-
-      updateAssistantMessage(assistantId, {
-        content: mergeStreamingText(current?.content || "", update.text || ""),
-        citations: update.citations?.length ? update.citations : current?.citations,
-        toolCalls: update.toolCalls?.length ? update.toolCalls : current?.toolCalls,
-        reasoning: update.reasoning?.length ? update.reasoning : current?.reasoning,
-        status: update.error ? "error" : update.done ? "idle" : "streaming",
-      });
-
-      if (update.error) {
-        setError(update.error);
-      }
-    },
-  );
 
   async function sendStreamingMessage(
     query: string,
@@ -69,7 +39,21 @@ export function useStreaming() {
         query,
         history,
         (update) => {
-          handleUpdate(assistantId, update);
+          const current = useChatStore
+            .getState()
+            .messages.find((message) => message.id === assistantId);
+
+          updateAssistantMessage(assistantId, {
+            content: mergeStreamingText(current?.content || "", update.text || ""),
+            citations: update.citations?.length ? update.citations : current?.citations,
+            toolCalls: update.toolCalls?.length ? update.toolCalls : current?.toolCalls,
+            reasoning: update.reasoning?.length ? update.reasoning : current?.reasoning,
+            status: update.error ? "error" : update.done ? "idle" : "streaming",
+          });
+
+          if (update.error) {
+            setError(update.error);
+          }
         },
         controller.signal,
       );
