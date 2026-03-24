@@ -3,7 +3,7 @@
 import { create } from "zustand";
 
 import { clearAuthToken, login as loginRequest, register as registerRequest, setAuthToken, getCurrentUser } from "@/lib/api";
-import type { AuthUser } from "@/lib/types";
+import type { AuthUser, UsageSummary } from "@/lib/types";
 import { useChatStore } from "@/stores/chat-store";
 import { useDocumentStore } from "@/stores/document-store";
 import { useMemoryStore } from "@/stores/memory-store";
@@ -16,10 +16,12 @@ interface AuthStore {
   isLoading: boolean;
   error?: string;
   hydrate: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => void;
   setError: (value?: string) => void;
+  setUsage: (usage: UsageSummary) => void;
 }
 
 function resetWorkspaceState() {
@@ -55,6 +57,15 @@ export const useAuthStore = create<AuthStore>((set) => ({
         isLoading: false,
       });
     }
+  },
+  async refreshUser() {
+    const user = await getCurrentUser();
+    set((state) => ({
+      user,
+      isAuthenticated: state.isAuthenticated || Boolean(user.username),
+      isHydrated: true,
+      error: undefined,
+    }));
   },
   async login(username, password) {
     set({ isLoading: true, error: undefined });
@@ -119,5 +130,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
   setError(value) {
     set({ error: value });
+  },
+  setUsage(usage) {
+    set((state) => ({
+      user: state.user ? { ...state.user, usage } : state.user,
+    }));
   },
 }));

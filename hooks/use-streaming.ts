@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useRef } from "react";
 
 import { streamResponse } from "@/lib/api";
 import type { AssistantMode } from "@/lib/types";
 import { mergeStreamingText } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
 
 export function useStreaming() {
@@ -42,6 +43,10 @@ export function useStreaming() {
           const current = useChatStore
             .getState()
             .messages.find((message) => message.id === assistantId);
+
+          if (update.usage) {
+            useAuthStore.getState().setUsage(update.usage);
+          }
 
           updateAssistantMessage(assistantId, {
             content: mergeStreamingText(current?.content || "", update.text || ""),

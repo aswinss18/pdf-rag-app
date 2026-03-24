@@ -1,8 +1,17 @@
 export type AssistantMode = "rag" | "agent";
 
+export interface UsageSummary {
+  date: string;
+  requestsUsed: number;
+  requestsLimit: number;
+  requestsRemaining: number;
+  tokensUsed: number;
+}
+
 export interface AuthUser {
   id: number;
   username: string;
+  usage: UsageSummary;
 }
 
 export interface AuthResponse {
@@ -81,6 +90,7 @@ export interface StreamUpdate {
   citations?: Citation[];
   toolCalls?: ToolCall[];
   reasoning?: ReasoningStep[];
+  usage?: UsageSummary;
   done?: boolean;
   error?: string;
 }

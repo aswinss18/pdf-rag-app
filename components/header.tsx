@@ -1,6 +1,6 @@
 "use client";
 
-import { Database, LogOut, Moon, Sun, UserRound, Wifi } from "lucide-react";
+import { Activity, Database, LogOut, Moon, Sun, UserRound, Wifi } from "lucide-react";
 
 import { useTheme } from "@/components/providers";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ export function Header() {
   const { theme, toggleTheme } = useTheme();
   const status = useSystemStore((state) => state.status);
   const { user, isAuthenticated, logout } = useAuthStore();
+  const usage = user?.usage;
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-[var(--app-chrome)]/85 backdrop-blur-xl">
@@ -45,6 +46,13 @@ export function Header() {
           ) : (
             <Badge tone="warning">Auth required</Badge>
           )}
+          {usage ? (
+            <Badge tone={usage.requestsRemaining > 0 ? "success" : "warning"}>
+              <Activity className="mr-2 h-3.5 w-3.5" />
+              {usage.requestsRemaining}/{usage.requestsLimit} agent requests left
+            </Badge>
+          ) : null}
+          {usage ? <Badge>{usage.tokensUsed} tokens today</Badge> : null}
           {isAuthenticated ? (
             <Button variant="secondary" className="h-10 px-3" onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />

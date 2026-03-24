@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
@@ -10,21 +10,31 @@ import { StreamingMessage } from "@/components/chat/streaming-message";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import { useStreaming } from "@/hooks/use-streaming";
+import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
 
 export function ChatInterface() {
   const endRef = useRef<HTMLDivElement | null>(null);
   const { messages, isStreaming, clearChat, currentMode, error } = useChatStore();
+  const usage = useAuthStore((state) => state.user?.usage);
   const { sendStreamingMessage, stopStreaming } = useStreaming();
+  const isAgentLimitReached = currentMode === "agent" && (usage?.requestsRemaining ?? 0) <= 0;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isStreaming]);
 
   useEffect(() => {
-    if (error) {
-      toast.error(error);
+    if (!error) {
+      return;
     }
+
+    if (error === "Daily limit reached") {
+      toast.error("Limit reached. Try tomorrow.");
+      return;
+    }
+
+    toast.error(error);
   }, [error]);
 
   return (
@@ -74,11 +84,19 @@ export function ChatInterface() {
 
       <ChatInput
         isBusy={isStreaming}
+        isLimited={isAgentLimitReached}
+        remainingRequests={usage?.requestsRemaining ?? 0}
+        requestLimit={usage?.requestsLimit ?? 0}
+        tokensUsed={usage?.tokensUsed ?? 0}
         onStop={stopStreaming}
         onSend={async (value) => {
           try {
             await sendStreamingMessage(value);
-          } catch {
+          } catch (error) {
+            if (error instanceof Error && error.message === "Daily limit reached") {
+              toast.error("Limit reached. Try tomorrow.");
+              return;
+            }
             toast.error("The stream ended unexpectedly.");
           }
         }}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { CornerDownLeft, Loader2, SendHorizontal, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -9,10 +9,18 @@ const MAX_CHARS = 3000;
 
 export function ChatInput({
   isBusy,
+  isLimited,
+  remainingRequests,
+  requestLimit,
+  tokensUsed,
   onSend,
   onStop,
 }: {
   isBusy: boolean;
+  isLimited: boolean;
+  remainingRequests: number;
+  requestLimit: number;
+  tokensUsed: number;
   onSend: (value: string) => Promise<void>;
   onStop: () => void;
 }) {
@@ -35,11 +43,12 @@ export function ChatInput({
         ref={textareaRef}
         value={value}
         maxLength={MAX_CHARS}
+        disabled={isLimited}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={async (event) => {
           if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
-            if (!value.trim() || isBusy) {
+            if (!value.trim() || isBusy || isLimited) {
               return;
             }
 
@@ -49,13 +58,19 @@ export function ChatInput({
           }
         }}
         rows={1}
-        placeholder="Ask about your PDFs, request a summary, or let the agent inspect the workspace..."
-        className="max-h-[220px] min-h-[110px] w-full resize-none bg-transparent text-[15px] leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
+        placeholder={
+          isLimited
+            ? "Daily agent limit reached. Try again tomorrow."
+            : "Ask about your PDFs, request a summary, or let the agent inspect the workspace..."
+        }
+        className="max-h-[220px] min-h-[110px] w-full resize-none bg-transparent text-[15px] leading-7 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] disabled:cursor-not-allowed disabled:opacity-60"
       />
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2 text-xs uppercase tracking-[0.18em] text-[var(--text-muted)]">
           <p>{value.length}/{MAX_CHARS} characters</p>
+          <p>{remainingRequests}/{requestLimit} agent requests left today</p>
+          <p>{tokensUsed} tokens used today</p>
           <p className="flex items-center gap-2">
             <CornerDownLeft className="h-3.5 w-3.5" />
             Enter sends, Shift+Enter adds a new line
@@ -70,9 +85,9 @@ export function ChatInput({
             </Button>
           ) : null}
           <Button
-            disabled={isBusy || !value.trim()}
+            disabled={isBusy || isLimited || !value.trim()}
             onClick={async () => {
-              if (!value.trim()) {
+              if (!value.trim() || isLimited) {
                 return;
               }
               const nextValue = value.trim();

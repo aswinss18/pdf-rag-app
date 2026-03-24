@@ -12,6 +12,7 @@ import type {
   StreamUpdate,
   SystemStatus,
   ToolCall,
+  UsageSummary,
 } from "@/lib/types";
 
 const API_BASE_URL = "/api";
@@ -118,6 +119,17 @@ function pickString(...values: unknown[]) {
     }
   }
   return "";
+}
+
+function normalizeUsage(payload: unknown): UsageSummary {
+  const record = asRecord(payload);
+  return {
+    date: pickString(record.date),
+    requestsUsed: pickNumber(record.requests_used, record.requestsUsed),
+    requestsLimit: pickNumber(record.requests_limit, record.requestsLimit),
+    requestsRemaining: pickNumber(record.requests_remaining, record.requestsRemaining),
+    tokensUsed: pickNumber(record.tokens_used, record.tokensUsed),
+  };
 }
 
 function normalizeCitation(source: unknown, index: number): Citation {
@@ -285,6 +297,7 @@ function normalizeAuthUser(payload: unknown): AuthUser {
   return {
     id: typeof record.id === "number" ? record.id : 0,
     username: pickString(record.username),
+    usage: normalizeUsage(root.usage),
   };
 }
 
@@ -421,6 +434,7 @@ function normalizeStreamPayload(payload: unknown): StreamUpdate {
     citations: asArray(record.sources || record.citations).map(normalizeCitation),
     toolCalls: asArray(record.tool_calls || record.tools).map(normalizeToolCall),
     reasoning: asArray(record.reasoning_steps || record.reasoning || record.steps).map(normalizeReasoning),
+    usage: record.usage ? normalizeUsage(record.usage) : undefined,
     done: Boolean(record.done) || type === "done" || type === "complete" || type === "final",
     error: pickString(record.error),
   };
