@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 @theme inline {
   --font-sans: var(--font-manrope);
@@ -55,6 +55,7 @@ html {
     var(--app-bg);
   color: var(--text-primary);
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -63,6 +64,11 @@ body {
   background: transparent;
   color: var(--text-primary);
   font-family: var(--font-manrope), sans-serif;
+  overflow-x: hidden;
+}
+
+#__next {
+  min-height: 100vh;
 }
 
 a {
@@ -74,6 +80,20 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+pre,
+code {
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 ::selection {

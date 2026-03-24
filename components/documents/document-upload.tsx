@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { UploadCloud } from "lucide-react";
 import { useDropzone } from "react-dropzone";
@@ -39,23 +39,23 @@ export function DocumentUpload() {
     <Panel className="overflow-hidden">
       <div
         {...getRootProps()}
-        className="cursor-pointer p-5 transition hover:bg-white/5"
+        className="cursor-pointer p-3 transition hover:bg-white/5 sm:p-5"
         aria-label="Upload PDF document"
       >
         <input {...getInputProps()} />
         <div
-          className={`rounded-[26px] border border-dashed p-6 transition ${
+          className={`rounded-[22px] border border-dashed p-4 transition sm:rounded-[26px] sm:p-6 ${
             isDragActive
               ? "border-[var(--accent)] bg-[var(--accent)]/10"
               : "border-[var(--border-strong)] bg-[var(--surface-soft)]"
           }`}
         >
-          <div className="flex items-center gap-4">
-            <div className="rounded-3xl bg-[var(--accent)]/15 p-4 text-[var(--accent)]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="w-fit rounded-3xl bg-[var(--accent)]/15 p-3 text-[var(--accent)] sm:p-4">
               <UploadCloud className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="font-display text-xl text-[var(--text-primary)]">
+              <h2 className="font-display text-lg text-[var(--text-primary)] sm:text-xl">
                 Drop a PDF to ingest it
               </h2>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">
@@ -64,15 +64,15 @@ export function DocumentUpload() {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
+          <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-[var(--text-secondary)] sm:mt-6 sm:gap-3">
             <span>Drag and drop or click to browse</span>
             <span className="rounded-full bg-black/15 px-3 py-1">PDF only</span>
             <span className="rounded-full bg-black/15 px-3 py-1">{formatBytes(25 * 1024 * 1024)} suggested max</span>
           </div>
 
           {isUploading ? (
-            <div className="mt-6">
-              <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+            <div className="mt-5 sm:mt-6">
+              <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-[var(--text-muted)] sm:tracking-[0.22em]">
                 <span>Uploading</span>
                 <span>{uploadProgress}%</span>
               </div>

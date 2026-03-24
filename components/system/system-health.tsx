@@ -1,4 +1,4 @@
-﻿import { Brain, Database, FileText, Layers3 } from "lucide-react";
+import { Brain, Database, FileText, Layers3 } from "lucide-react";
 
 import { StatusIndicator } from "@/components/system/status-indicator";
 import { Panel } from "@/components/ui/panel";
@@ -9,20 +9,20 @@ export function SystemHealth() {
   const { status, error } = useSystemStore();
 
   return (
-    <Panel className="p-5">
-      <div className="mb-4 flex items-start justify-between gap-4">
+    <Panel className="p-4 sm:p-5">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)]">
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)] sm:tracking-[0.28em]">
             System Status
           </p>
-          <h2 className="mt-2 font-display text-xl text-[var(--text-primary)]">
+          <h2 className="mt-2 font-display text-lg text-[var(--text-primary)] sm:text-xl">
             Live service telemetry
           </h2>
         </div>
         <StatusIndicator healthy={Boolean(status?.healthy)} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         <MetricCard
           icon={FileText}
           label="Documents"
@@ -42,7 +42,7 @@ export function SystemHealth() {
       </div>
 
       {error ? (
-        <p className="mt-4 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <p className="mt-4 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-200 break-words">
           {error}
         </p>
       ) : null}
@@ -67,7 +67,7 @@ function MetricCard({
         </div>
         <span className="text-sm">{label}</span>
       </div>
-      <p className="mt-4 text-lg font-semibold text-[var(--text-primary)]">{value}</p>
+      <p className="mt-4 break-words text-base font-semibold text-[var(--text-primary)] sm:text-lg">{value}</p>
     </div>
   );
 }

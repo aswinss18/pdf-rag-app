@@ -38,20 +38,20 @@ export function ChatInterface() {
   }, [error]);
 
   return (
-    <div className="flex min-h-[calc(100vh-8rem)] flex-col gap-4">
-      <Panel className="p-5">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex min-h-[calc(100vh-7rem)] flex-col gap-3 sm:min-h-[calc(100vh-8rem)] sm:gap-4">
+      <Panel className="p-4 sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)]">
+            <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)] sm:tracking-[0.28em]">
               Conversational Workspace
             </p>
-            <h2 className="mt-2 font-display text-2xl text-[var(--text-primary)]">
+            <h2 className="mt-2 font-display text-xl text-[var(--text-primary)] sm:text-2xl">
               {currentMode === "rag"
                 ? "Ground answers in the indexed document set"
                 : "Reason across the workspace with agent tools"}
             </h2>
           </div>
-          <Button variant="ghost" onClick={clearChat}>
+          <Button variant="ghost" className="w-full sm:w-auto" onClick={clearChat}>
             Clear chat
           </Button>
         </div>
@@ -60,14 +60,14 @@ export function ChatInterface() {
       </Panel>
 
       <Panel className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
+        <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:space-y-4 sm:p-5">
           {messages.length ? (
             messages.map((message) => (
               <MessageBubble key={message.id} message={message} />
             ))
           ) : (
-            <div className="flex h-full min-h-[360px] flex-col items-center justify-center rounded-[28px] border border-dashed border-[var(--border-strong)] bg-[linear-gradient(180deg,_rgba(255,255,255,0.02),_transparent)] p-8 text-center">
-              <p className="font-display text-3xl text-[var(--text-primary)]">
+            <div className="flex h-full min-h-[260px] flex-col items-center justify-center rounded-[24px] border border-dashed border-[var(--border-strong)] bg-[linear-gradient(180deg,_rgba(255,255,255,0.02),_transparent)] p-6 text-center sm:min-h-[360px] sm:rounded-[28px] sm:p-8">
+              <p className="font-display text-2xl text-[var(--text-primary)] sm:text-3xl">
                 Ask the assistant what matters in your PDFs
               </p>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">

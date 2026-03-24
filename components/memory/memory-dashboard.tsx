@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { RotateCcw, Sparkles, Trash } from "lucide-react";
 import toast from "react-hot-toast";
@@ -12,12 +12,12 @@ export function MemoryDashboard() {
   const { clearMemory, cleanupMemory, details, error, isLoading, stats } = useMemoryStore();
 
   return (
-    <Panel className="p-5">
+    <Panel className="p-4 sm:p-5">
       <div className="mb-5">
-        <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)]">
+        <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)] sm:tracking-[0.28em]">
           Memory
         </p>
-        <h2 className="mt-2 font-display text-xl text-[var(--text-primary)]">
+        <h2 className="mt-2 font-display text-lg text-[var(--text-primary)] sm:text-xl">
           Persistent conversation context
         </h2>
       </div>
@@ -27,6 +27,7 @@ export function MemoryDashboard() {
       <div className="mt-5 grid gap-3">
         <Button
           variant="secondary"
+          className="w-full"
           disabled={isLoading}
           onClick={async () => {
             try {
@@ -44,6 +45,7 @@ export function MemoryDashboard() {
         </Button>
         <Button
           variant="secondary"
+          className="w-full"
           disabled={isLoading}
           onClick={async () => {
             try {
@@ -61,6 +63,7 @@ export function MemoryDashboard() {
         </Button>
         <Button
           variant="danger"
+          className="w-full"
           disabled={isLoading}
           onClick={async () => {
             try {
@@ -78,20 +81,20 @@ export function MemoryDashboard() {
         </Button>
       </div>
 
-      <div className="mt-5 rounded-[24px] border border-[var(--border-soft)] bg-[var(--surface-soft)] p-4">
-        <p className="text-xs uppercase tracking-[0.22em] text-[var(--text-muted)]">
+      <div className="mt-5 rounded-[22px] border border-[var(--border-soft)] bg-[var(--surface-soft)] p-4 sm:rounded-[24px]">
+        <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-muted)] sm:tracking-[0.22em]">
           Memory details
         </p>
-        <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)]">
+        <p className="mt-3 text-sm leading-7 text-[var(--text-secondary)] break-words">
           Usage: {stats?.usageLabel || "Not reported"}
         </p>
-        <pre className="mt-4 max-h-48 overflow-auto rounded-2xl bg-black/20 p-3 text-xs text-[var(--text-secondary)]">
+        <pre className="mt-4 max-h-48 overflow-auto rounded-2xl bg-black/20 p-3 text-[11px] text-[var(--text-secondary)] sm:text-xs">
           {JSON.stringify(details || {}, null, 2)}
         </pre>
       </div>
 
       {error ? (
-        <p className="mt-4 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <p className="mt-4 rounded-2xl bg-rose-500/10 px-4 py-3 text-sm text-rose-200 break-words">
           {error}
         </p>
       ) : null}

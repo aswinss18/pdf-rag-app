@@ -38,16 +38,20 @@ export function AppShell() {
     <div className="min-h-screen bg-[var(--app-bg)]">
       <Header />
       {!isHydrated ? (
-        <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-[1600px] items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
-          <div className="rounded-[28px] border border-[var(--border-strong)] bg-[var(--surface)] px-6 py-5 text-sm text-[var(--text-secondary)] shadow-[var(--panel-shadow)]">
+        <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-[1600px] items-center justify-center px-4 py-6 sm:min-h-[calc(100vh-6rem)] sm:px-6 lg:px-8">
+          <div className="rounded-[24px] border border-[var(--border-strong)] bg-[var(--surface)] px-5 py-4 text-sm text-[var(--text-secondary)] shadow-[var(--panel-shadow)] sm:rounded-[28px] sm:px-6 sm:py-5">
             Restoring session...
           </div>
         </div>
       ) : isAuthenticated ? (
-        <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
-          <div className="grid gap-6 xl:grid-cols-[430px_minmax(0,1fr)]">
-            <Sidebar />
-            <ChatInterface />
+        <main className="mx-auto max-w-[1600px] px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
+          <div className="grid gap-4 xl:grid-cols-[390px_minmax(0,1fr)] xl:gap-6 2xl:grid-cols-[430px_minmax(0,1fr)]">
+            <div className="order-2 xl:order-1">
+              <Sidebar />
+            </div>
+            <div className="order-1 xl:order-2">
+              <ChatInterface />
+            </div>
           </div>
         </main>
       ) : (

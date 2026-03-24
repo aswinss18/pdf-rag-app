@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FolderOpen, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -12,19 +12,19 @@ export function DocumentList() {
   const { clearAllDocuments, documents, isLoading } = useDocumentStore();
 
   return (
-    <Panel className="p-5">
-      <div className="mb-5 flex items-start justify-between gap-4">
+    <Panel className="p-4 sm:p-5">
+      <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.28em] text-[var(--text-muted)]">
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)] sm:tracking-[0.28em]">
             Documents
           </p>
-          <h2 className="mt-2 font-display text-xl text-[var(--text-primary)]">
+          <h2 className="mt-2 font-display text-lg text-[var(--text-primary)] sm:text-xl">
             Indexed library
           </h2>
         </div>
         <Button
           variant="danger"
-          className="h-10 px-3"
+          className="h-10 w-full px-3 sm:w-auto"
           disabled={!documents.length || isLoading}
           onClick={async () => {
             try {
@@ -49,9 +49,9 @@ export function DocumentList() {
           ))}
         </div>
       ) : (
-        <div className="rounded-[24px] border border-dashed border-[var(--border-strong)] bg-[var(--surface-soft)] p-6 text-center">
+        <div className="rounded-[22px] border border-dashed border-[var(--border-strong)] bg-[var(--surface-soft)] p-5 text-center sm:rounded-[24px] sm:p-6">
           <FolderOpen className="mx-auto h-8 w-8 text-[var(--accent)]" />
-          <p className="mt-4 text-lg font-medium text-[var(--text-primary)]">
+          <p className="mt-4 text-base font-medium text-[var(--text-primary)] sm:text-lg">
             No PDFs indexed yet
           </p>
           <p className="mt-2 text-sm text-[var(--text-secondary)]">
