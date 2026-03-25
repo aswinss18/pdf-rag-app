@@ -65,6 +65,25 @@ export interface DocumentRecord {
   uploadedAt?: string;
 }
 
+export interface UploadJob {
+  jobId: string;
+  filename: string;
+  status: string;
+  message?: string;
+}
+
+export interface UploadJobStatus {
+  jobId: string;
+  filename: string;
+  status: string;
+  message?: string;
+  error?: string;
+  chunksCreated: number;
+  documentsLoaded: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface SystemStatus {
   healthy: boolean;
   model?: string;

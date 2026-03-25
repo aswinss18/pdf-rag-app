@@ -9,7 +9,7 @@ import { formatBytes } from "@/lib/utils";
 import { useDocumentStore } from "@/stores/document-store";
 
 export function DocumentUpload() {
-  const { isUploading, uploadDocument, uploadProgress } = useDocumentStore();
+  const { isUploading, uploadDocument, uploadProgress, uploadStatus, activeJob } = useDocumentStore();
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "application/pdf": [".pdf"] },
@@ -23,7 +23,7 @@ export function DocumentUpload() {
 
       try {
         await uploadDocument(file);
-        toast.success(`${file.name} uploaded successfully.`);
+        toast.success(`${file.name} uploaded and processed successfully.`);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Unable to upload the document.",
@@ -73,7 +73,7 @@ export function DocumentUpload() {
           {isUploading ? (
             <div className="mt-5 sm:mt-6">
               <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.18em] text-[var(--text-muted)] sm:tracking-[0.22em]">
-                <span>Uploading</span>
+                <span>{uploadStatus || "Uploading"}</span>
                 <span>{uploadProgress}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-black/15">
@@ -82,6 +82,11 @@ export function DocumentUpload() {
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
+              {activeJob ? (
+                <p className="mt-3 text-xs text-[var(--text-secondary)]">
+                  {activeJob.status} - {activeJob.filename}
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>

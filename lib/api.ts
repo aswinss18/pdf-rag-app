@@ -12,6 +12,8 @@ import type {
   StreamUpdate,
   SystemStatus,
   ToolCall,
+  UploadJob,
+  UploadJobStatus,
   UsageSummary,
 } from "@/lib/types";
 
@@ -256,6 +258,31 @@ function normalizeStatus(payload: unknown): SystemStatus {
   };
 }
 
+function normalizeUploadJob(payload: unknown): UploadJob {
+  const record = asRecord(payload);
+  return {
+    jobId: pickString(record.job_id, record.jobId),
+    filename: pickString(record.filename, record.name),
+    status: pickString(record.status) || "queued",
+    message: pickString(record.message) || undefined,
+  };
+}
+
+function normalizeUploadJobStatus(payload: unknown): UploadJobStatus {
+  const record = asRecord(payload);
+  return {
+    jobId: pickString(record.job_id, record.jobId),
+    filename: pickString(record.filename, record.name),
+    status: pickString(record.status) || "queued",
+    message: pickString(record.message) || undefined,
+    error: pickString(record.error) || undefined,
+    chunksCreated: pickNumber(record.chunks_created, record.chunksCreated),
+    documentsLoaded: pickNumber(record.documents_loaded, record.documentsLoaded),
+    createdAt: pickString(record.created_at, record.createdAt) || undefined,
+    updatedAt: pickString(record.updated_at, record.updatedAt) || undefined,
+  };
+}
+
 function normalizeMemoryStats(payload: unknown): MemoryStats {
   const record = asRecord(asRecord(payload).memory_stats ?? payload);
   return {
@@ -355,11 +382,17 @@ export async function uploadDocument(file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  await request<unknown>("/upload", {
+  const result = await request<unknown>("/upload", {
     method: "POST",
     body: formData,
     headers: {},
   });
+  return normalizeUploadJob(result);
+}
+
+export async function getUploadJob(jobId: string) {
+  const result = await request<unknown>(`/job/${jobId}`);
+  return normalizeUploadJobStatus(result);
 }
 
 export async function clearDocuments() {
