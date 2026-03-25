@@ -5,7 +5,6 @@ import toast from "react-hot-toast";
 
 import { ChatInput } from "@/components/chat/chat-input";
 import { MessageBubble } from "@/components/chat/message-bubble";
-import { ModeSelector } from "@/components/chat/mode-selector";
 import { StreamingMessage } from "@/components/chat/streaming-message";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
@@ -15,10 +14,10 @@ import { useChatStore } from "@/stores/chat-store";
 
 export function ChatInterface() {
   const endRef = useRef<HTMLDivElement | null>(null);
-  const { messages, isStreaming, clearChat, currentMode, error } = useChatStore();
+  const { messages, isStreaming, clearChat, error } = useChatStore();
   const usage = useAuthStore((state) => state.user?.usage);
   const { sendStreamingMessage, stopStreaming } = useStreaming();
-  const isAgentLimitReached = currentMode === "agent" && (usage?.requestsRemaining ?? 0) <= 0;
+  const isAgentLimitReached = (usage?.requestsRemaining ?? 0) <= 0;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,17 +45,13 @@ export function ChatInterface() {
               Conversational Workspace
             </p>
             <h2 className="mt-2 font-display text-xl text-[var(--text-primary)] sm:text-2xl">
-              {currentMode === "rag"
-                ? "Ground answers in the indexed document set"
-                : "Reason across the workspace with agent tools"}
+              Reason across the workspace with agent tools
             </h2>
           </div>
           <Button variant="ghost" className="w-full sm:w-auto" onClick={clearChat}>
             Clear chat
           </Button>
         </div>
-
-        <ModeSelector />
       </Panel>
 
       <Panel className="flex flex-1 flex-col overflow-hidden">
@@ -71,8 +66,8 @@ export function ChatInterface() {
                 Ask the assistant what matters in your PDFs
               </p>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--text-secondary)]">
-                Use RAG mode for grounded retrieval or switch to agent mode for
-                multi-step reasoning, tool calls, and memory-aware analysis.
+                Agent mode now handles document reasoning, retrieval, tool calls,
+                and memory-aware analysis in one place.
               </p>
             </div>
           )}

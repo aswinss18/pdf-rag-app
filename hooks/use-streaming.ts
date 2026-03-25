@@ -3,7 +3,6 @@
 import { useRef } from "react";
 
 import { streamResponse } from "@/lib/api";
-import type { AssistantMode } from "@/lib/types";
 import { mergeStreamingText } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useChatStore } from "@/stores/chat-store";
@@ -13,17 +12,13 @@ export function useStreaming() {
   const {
     addUserMessage,
     createAssistantMessage,
-    currentMode,
     messages,
     setError,
     setStreaming,
     updateAssistantMessage,
   } = useChatStore();
 
-  async function sendStreamingMessage(
-    query: string,
-    mode: AssistantMode = currentMode,
-  ) {
+  async function sendStreamingMessage(query: string) {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -36,7 +31,6 @@ export function useStreaming() {
     try {
       const history = messages.filter((message) => message.role !== "system");
       await streamResponse(
-        mode,
         query,
         history,
         (update) => {

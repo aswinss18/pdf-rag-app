@@ -1,4 +1,4 @@
-export type AssistantMode = "rag" | "agent";
+export type AssistantMode = "agent";
 
 export interface UsageSummary {
   date: string;

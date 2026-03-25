@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-import { askAgent, askQuestion } from "@/lib/api";
+import { askAgent } from "@/lib/api";
 import type {
   AssistantMode,
   ChatMessage,
@@ -17,7 +17,6 @@ interface ChatStore {
   isStreaming: boolean;
   currentMode: AssistantMode;
   error?: string;
-  setMode: (mode: AssistantMode) => void;
   addUserMessage: (content: string) => string;
   createAssistantMessage: () => string;
   updateAssistantMessage: (
@@ -39,11 +38,8 @@ interface ChatStore {
 export const useChatStore = create<ChatStore>((set, get) => ({
   messages: [],
   isStreaming: false,
-  currentMode: "rag",
+  currentMode: "agent",
   error: undefined,
-  setMode(mode) {
-    set({ currentMode: mode });
-  },
   addUserMessage(content) {
     const id = uid("user");
     const message: ChatMessage = {
@@ -97,10 +93,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     try {
       const history = messages.filter((message) => message.role !== "system");
-      const response =
-        currentMode === "agent"
-          ? await askAgent(query, history)
-          : await askQuestion(query);
+      const response = await askAgent(query, history);
 
       updateAssistantMessage(assistantId, {
         content: response.content || "",
@@ -133,7 +126,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({
       messages: [],
       isStreaming: false,
-      currentMode: "rag",
+      currentMode: "agent",
       error: undefined,
     });
   },

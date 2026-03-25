@@ -1,7 +1,6 @@
 import "client-only";
 
 import type {
-  AssistantMode,
   AuthResponse,
   AuthUser,
   ChatMessage,
@@ -399,15 +398,6 @@ export async function clearDocuments() {
   await request<void>("/documents", { method: "DELETE" });
 }
 
-export async function askQuestion(query: string) {
-  const result = await request<unknown>("/ask", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  });
-  return normalizeAnswer(result);
-}
-
 export async function askAgent(query: string, history: ChatMessage[]) {
   const result = await request<unknown>("/agent", {
     method: "POST",
@@ -474,26 +464,22 @@ function normalizeStreamPayload(payload: unknown): StreamUpdate {
 }
 
 export async function streamResponse(
-  mode: AssistantMode,
   query: string,
   history: ChatMessage[],
   onUpdate: (update: StreamUpdate) => void,
   signal?: AbortSignal,
 ) {
-  const path = mode === "agent" ? "/agent-stream" : "/ask-stream";
   const body =
-    mode === "agent"
-      ? {
-          query,
-          conversation_history: history.map((message) => ({
-            role: message.role,
-            content: message.content,
-          })),
-        }
-      : { query };
+    {
+      query,
+      conversation_history: history.map((message) => ({
+        role: message.role,
+        content: message.content,
+      })),
+    };
 
   const token = getStoredToken();
-  const response = await fetch(buildApiUrl(path), {
+  const response = await fetch(buildApiUrl("/agent-stream"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
